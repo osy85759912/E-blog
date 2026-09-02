@@ -25,8 +25,11 @@ def process(path):
 
     title = meta["title"]
     tickers = meta["tickers"]
+    primary_ticker = tickers.split(",")[0].strip()
+    person = meta.get("thumbnail_person")
     base = os.path.splitext(os.path.basename(path))[0]
     chart_path = f"/tmp/{base}.png"
+    thumb_path = f"/tmp/{base}-thumb.png"
     content_file = f"/tmp/{base}.html"
 
     subprocess.run(
@@ -34,22 +37,28 @@ def process(path):
         check=True,
     )
 
+    thumb_cmd = [sys.executable, "scripts/generate_thumbnail.py", "--ticker", primary_ticker, "--out", thumb_path]
+    if person:
+        thumb_cmd += ["--person", person]
+    thumb_result = subprocess.run(thumb_cmd)
+    have_thumb = thumb_result.returncode == 0 and os.path.exists(thumb_path)
+
     with open(content_file, "w", encoding="utf-8") as f:
         f.write(body)
 
-    subprocess.run(
-        [
-            sys.executable,
-            "scripts/publish_wordpress.py",
-            "--title",
-            title,
-            "--content-file",
-            content_file,
-            "--image",
-            chart_path,
-        ],
-        check=True,
-    )
+    publish_cmd = [
+        sys.executable,
+        "scripts/publish_wordpress.py",
+        "--title",
+        title,
+        "--content-file",
+        content_file,
+        "--image",
+        chart_path,
+    ]
+    if have_thumb:
+        publish_cmd += ["--thumbnail", thumb_path]
+    subprocess.run(publish_cmd, check=True)
 
 
 def main():
