@@ -34,10 +34,26 @@ def upload_media(site, auth, image_path):
     return media["id"], media["source_url"]
 
 
-def create_draft_post(site, auth, title, content_html, featured_media_id=None):
+def get_category_id_by_name(site, auth, name):
+    resp = requests.get(
+        f"{site}/wp-json/wp/v2/categories",
+        auth=auth,
+        params={"search": name, "per_page": 100},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    for category in resp.json():
+        if category["name"] == name:
+            return category["id"]
+    return None
+
+
+def create_draft_post(site, auth, title, content_html, featured_media_id=None, category_id=None):
     payload = {"title": title, "content": content_html, "status": "draft"}
     if featured_media_id:
         payload["featured_media"] = featured_media_id
+    if category_id:
+        payload["categories"] = [category_id]
     resp = requests.post(f"{site}/wp-json/wp/v2/posts", auth=auth, json=payload, timeout=60)
     resp.raise_for_status()
     return resp.json()
@@ -48,6 +64,7 @@ def main():
     parser.add_argument("--title", required=True)
     parser.add_argument("--content-file", required=True, help="HTML body")
     parser.add_argument("--image", help="chart image to attach as featured image + embed")
+    parser.add_argument("--category", default="주식", help="category name to assign (default: 주식)")
     args = parser.parse_args()
 
     site, auth = wp_env()
@@ -60,7 +77,9 @@ def main():
         media_id, media_url = upload_media(site, auth, args.image)
         content_html += f'\n<img src="{media_url}" alt="관련 종목 주가 차트" />\n'
 
-    post = create_draft_post(site, auth, args.title, content_html, media_id)
+    category_id = get_category_id_by_name(site, auth, args.category) if args.category else None
+
+    post = create_draft_post(site, auth, args.title, content_html, media_id, category_id)
     print(f"draft created: {post['link']} (id={post['id']}, status={post['status']})")
     print(f"edit: {site}/wp-admin/post.php?post={post['id']}&action=edit")
 
