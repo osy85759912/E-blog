@@ -69,22 +69,31 @@ def domain_for_ticker(ticker):
     return None
 
 
-BROWSER_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
-    "Accept": "image/svg+xml,image/*,*/*;q=0.8",
-}
+def recolor_to_white(img):
+    """Flatten any monochrome icon to solid white, keyed off its alpha silhouette."""
+    alpha = img.convert("RGBA").split()[-1]
+    white = Image.new("RGBA", img.size, (255, 255, 255, 255))
+    white.putalpha(alpha)
+    return white
 
 
-def fetch_simple_icon(slug, color="ffffff"):
-    url = f"https://cdn.simpleicons.org/{slug}/{color}"
-    try:
-        resp = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
-        print(f"[thumbnail] {url} -> {resp.status_code}", file=sys.stderr)
-        if resp.status_code == 200 and b"<svg" in resp.content[:200]:
-            png_bytes = cairosvg.svg2png(bytestring=resp.content, output_width=640, output_height=640)
-            return Image.open(io.BytesIO(png_bytes)).convert("RGBA")
-    except Exception as exc:
-        print(f"[thumbnail] fetch_simple_icon({slug}) failed: {exc!r}", file=sys.stderr)
+SIMPLE_ICON_SOURCES = [
+    "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/{slug}.svg",
+    "https://cdn.simpleicons.org/{slug}",
+]
+
+
+def fetch_simple_icon(slug):
+    for template in SIMPLE_ICON_SOURCES:
+        url = template.format(slug=slug)
+        try:
+            resp = requests.get(url, timeout=15)
+            print(f"[thumbnail] {url} -> {resp.status_code}", file=sys.stderr)
+            if resp.status_code == 200 and b"<svg" in resp.content[:200]:
+                png_bytes = cairosvg.svg2png(bytestring=resp.content, output_width=640, output_height=640)
+                return recolor_to_white(Image.open(io.BytesIO(png_bytes)))
+        except Exception as exc:
+            print(f"[thumbnail] fetch_simple_icon via {url} failed: {exc!r}", file=sys.stderr)
     return None
 
 
