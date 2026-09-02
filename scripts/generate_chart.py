@@ -39,20 +39,39 @@ def main():
     if data.empty:
         sys.exit(f"no price data returned for {tickers}")
 
-    normalized = data / data.iloc[0] * 100
+    columns = list(data.columns) if hasattr(data, "columns") else [tickers[0]]
 
     fig, ax = plt.subplots(figsize=(9, 5), dpi=150)
-    columns = normalized.columns if hasattr(normalized, "columns") else [tickers[0]]
-    for i, ticker in enumerate(columns):
-        series = normalized[ticker] if hasattr(normalized, "columns") else normalized
-        ax.plot(series.index, series.values, label=ticker, color=COLORS[i % len(COLORS)], linewidth=2)
-
-    ax.set_title(f"{args.period} 주가 추이 (시작일 = 100)", fontsize=13, pad=12)
-    ax.set_ylabel("상대 지수 (시작일=100)")
-    ax.grid(axis="y", alpha=0.3)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.legend(loc="upper left", frameon=False)
+    ax.grid(axis="y", alpha=0.3)
+
+    if len(columns) <= 1:
+        series = data[columns[0]] if hasattr(data, "columns") else data
+        ax.plot(series.index, series.values, color=COLORS[0], linewidth=2)
+        ax.set_ylabel(f"{columns[0]} 주가 ($)")
+        lines, labels = ax.get_legend_handles_labels()
+    elif len(columns) == 2:
+        ax2 = ax.twinx()
+        ax2.spines["top"].set_visible(False)
+        series0, series1 = data[columns[0]], data[columns[1]]
+        line0, = ax.plot(series0.index, series0.values, label=columns[0], color=COLORS[0], linewidth=2)
+        line1, = ax2.plot(series1.index, series1.values, label=columns[1], color=COLORS[1], linewidth=2)
+        ax.set_ylabel(f"{columns[0]} 주가 ($)", color=COLORS[0])
+        ax2.set_ylabel(f"{columns[1]} 주가 ($)", color=COLORS[1])
+        ax.tick_params(axis="y", labelcolor=COLORS[0])
+        ax2.tick_params(axis="y", labelcolor=COLORS[1])
+        lines, labels = [line0, line1], [columns[0], columns[1]]
+    else:
+        for i, ticker in enumerate(columns):
+            series = data[ticker]
+            ax.plot(series.index, series.values, label=ticker, color=COLORS[i % len(COLORS)], linewidth=2)
+        ax.set_ylabel("주가 ($)")
+        lines, labels = ax.get_legend_handles_labels()
+
+    ax.set_title(f"{args.period} 주가 추이", fontsize=13, pad=12)
+    if labels:
+        ax.legend(lines, labels, loc="upper left", frameon=False)
     fig.tight_layout()
     fig.savefig(args.out)
     print(args.out)
