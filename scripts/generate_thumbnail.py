@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Generate a featured-image thumbnail from a company logo (Clearbit) and,
-optionally, a Wikimedia Commons photo of a named person filtered to
-explicitly CC/public-domain licensed images only (never scraped press photos)."""
+"""Generate a featured-image thumbnail from a company logo (DuckDuckGo/Google
+favicon services) and, optionally, a Wikimedia Commons photo of a named
+person filtered to explicitly CC/public-domain licensed images only
+(never scraped press photos)."""
 import argparse
 import io
 import sys
@@ -18,7 +19,7 @@ CARD_WHITE = (255, 255, 255, 255)
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 HEADERS = {"User-Agent": "brotheroh-blog-thumbnail/1.0 (contact: osy85759912@gmail.com)"}
 
-SAFE_LICENSE_MARKERS = ("cc0", "cc-by", "public domain", "pd-", "cc-zero")
+SAFE_LICENSE_MARKERS = ("cc0", "cc by", "public domain", "pd ", "pd-", "cc zero")
 
 
 def domain_for_ticker(ticker):
@@ -33,17 +34,27 @@ def domain_for_ticker(ticker):
     return None
 
 
+LOGO_SOURCES = [
+    "https://icons.duckduckgo.com/ip3/{domain}.ico",
+    "https://www.google.com/s2/favicons?domain={domain}&sz=256",
+]
+
+
 def fetch_logo(domain):
     if not domain:
         print("[thumbnail] no domain, skipping logo fetch", file=sys.stderr)
         return None
-    try:
-        resp = requests.get(f"https://logo.clearbit.com/{domain}", timeout=15)
-        print(f"[thumbnail] logo.clearbit.com/{domain} -> {resp.status_code}", file=sys.stderr)
-        if resp.status_code == 200 and resp.content:
-            return Image.open(io.BytesIO(resp.content)).convert("RGBA")
-    except Exception as exc:
-        print(f"[thumbnail] fetch_logo({domain}) failed: {exc!r}", file=sys.stderr)
+    for template in LOGO_SOURCES:
+        url = template.format(domain=domain)
+        try:
+            resp = requests.get(url, timeout=15)
+            print(f"[thumbnail] {url} -> {resp.status_code}", file=sys.stderr)
+            if resp.status_code == 200 and resp.content:
+                img = Image.open(io.BytesIO(resp.content)).convert("RGBA")
+                if img.size[0] >= 32:
+                    return img
+        except Exception as exc:
+            print(f"[thumbnail] fetch_logo via {url} failed: {exc!r}", file=sys.stderr)
     return None
 
 
@@ -86,8 +97,9 @@ def find_commons_photo(person_name):
             imageinfo = (page.get("imageinfo") or [None])[0]
             if not imageinfo:
                 continue
-            license_short = imageinfo.get("extmetadata", {}).get("LicenseShortName", {}).get("value", "").lower()
-            print(f"[thumbnail] {title!r} license={license_short!r}", file=sys.stderr)
+            license_raw = imageinfo.get("extmetadata", {}).get("LicenseShortName", {}).get("value", "").lower()
+            license_short = license_raw.replace("-", " ")
+            print(f"[thumbnail] {title!r} license={license_raw!r}", file=sys.stderr)
             if not any(marker in license_short for marker in SAFE_LICENSE_MARKERS):
                 continue
             img_resp = requests.get(imageinfo["url"], headers=HEADERS, timeout=20)
