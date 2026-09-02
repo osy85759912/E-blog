@@ -1,0 +1,37 @@
+name: Publish WordPress Draft
+
+on:
+  push:
+    branches: [claude/us-market-blog-automation-ke4cp6]
+    paths:
+      - "pending/**.md"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate chart + upload WordPress draft
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python scripts/process_pending_draft.py
+
+      - name: Move processed draft into published/
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pending published
+          git diff --cached --quiet || git commit -m "Move processed draft to published/"
+          git push
