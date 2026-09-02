@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """One-off cleanup: trash the WordPress draft posts created while testing the pipeline."""
+import html
 import os
 import sys
 
@@ -34,7 +35,7 @@ def main():
     posts = resp.json()
 
     for post in posts:
-        title = post["title"]["rendered"]
+        title = html.unescape(post["title"]["rendered"])
         if title in TEST_TITLES:
             del_resp = requests.delete(
                 f"{site}/wp-json/wp/v2/posts/{post['id']}",
