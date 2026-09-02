@@ -7,11 +7,9 @@ import sys
 import requests
 
 TEST_TITLES = {
-    "자동화 테스트 - 무시해주세요",
-    "자동화 테스트 2차 - 무시해주세요",
-    "자동화 테스트 3차 - 무시해주세요",
     "팀 쿡 15년 만에 떠난 날, 애플 주가는 왜 2.61% 올랐을까",
 }
+TEST_MARKERS = ("테스트",)
 
 
 def wp_env():
@@ -36,7 +34,7 @@ def main():
 
     for post in posts:
         title = html.unescape(post["title"]["rendered"])
-        if title in TEST_TITLES:
+        if title in TEST_TITLES or any(marker in title for marker in TEST_MARKERS):
             del_resp = requests.delete(
                 f"{site}/wp-json/wp/v2/posts/{post['id']}",
                 auth=auth,
