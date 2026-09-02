@@ -2,3 +2,4 @@ yfinance
 matplotlib
 requests
 Pillow
+cairosvg

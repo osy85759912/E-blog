@@ -19,8 +19,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Korean font for chart rendering
-        run: sudo apt-get update && sudo apt-get install -y fonts-nanum
+      - name: Install fonts + cairo (chart/thumbnail rendering)
+        run: sudo apt-get update && sudo apt-get install -y fonts-nanum libcairo2
 
       - run: pip install -r requirements.txt
 

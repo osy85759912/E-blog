@@ -37,7 +37,16 @@ def process(path):
         check=True,
     )
 
-    thumb_cmd = [sys.executable, "scripts/generate_thumbnail.py", "--ticker", primary_ticker, "--out", thumb_path]
+    thumb_cmd = [
+        sys.executable,
+        "scripts/generate_thumbnail.py",
+        "--ticker",
+        primary_ticker,
+        "--title",
+        title,
+        "--out",
+        thumb_path,
+    ]
     if person:
         thumb_cmd += ["--person", person]
     thumb_result = subprocess.run(thumb_cmd)
