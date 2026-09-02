@@ -27,7 +27,7 @@ def upload_media(site, auth, image_path):
                 "Content-Type": mime or "application/octet-stream",
             },
             data=f.read(),
-            timeout=30,
+            timeout=90,
         )
     resp.raise_for_status()
     media = resp.json()
@@ -38,7 +38,7 @@ def create_draft_post(site, auth, title, content_html, featured_media_id=None):
     payload = {"title": title, "content": content_html, "status": "draft"}
     if featured_media_id:
         payload["featured_media"] = featured_media_id
-    resp = requests.post(f"{site}/wp-json/wp/v2/posts", auth=auth, json=payload, timeout=30)
+    resp = requests.post(f"{site}/wp-json/wp/v2/posts", auth=auth, json=payload, timeout=60)
     resp.raise_for_status()
     return resp.json()
 
