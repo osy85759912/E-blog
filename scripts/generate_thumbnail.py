@@ -25,22 +25,25 @@ def domain_for_ticker(ticker):
     try:
         info = yf.Ticker(ticker).info
         website = info.get("website")
+        print(f"[thumbnail] ticker={ticker} website={website!r}", file=sys.stderr)
         if website:
             return website.split("//")[-1].split("/")[0].replace("www.", "")
-    except Exception:
-        pass
+    except Exception as exc:
+        print(f"[thumbnail] domain_for_ticker({ticker}) failed: {exc!r}", file=sys.stderr)
     return None
 
 
 def fetch_logo(domain):
     if not domain:
+        print("[thumbnail] no domain, skipping logo fetch", file=sys.stderr)
         return None
     try:
         resp = requests.get(f"https://logo.clearbit.com/{domain}", timeout=15)
+        print(f"[thumbnail] logo.clearbit.com/{domain} -> {resp.status_code}", file=sys.stderr)
         if resp.status_code == 200 and resp.content:
             return Image.open(io.BytesIO(resp.content)).convert("RGBA")
-    except Exception:
-        pass
+    except Exception as exc:
+        print(f"[thumbnail] fetch_logo({domain}) failed: {exc!r}", file=sys.stderr)
     return None
 
 
@@ -60,7 +63,9 @@ def find_commons_photo(person_name):
             timeout=15,
         ).json()
         candidates = [r["title"] for r in search.get("query", {}).get("search", [])]
-    except Exception:
+        print(f"[thumbnail] commons candidates for {person_name!r}: {candidates}", file=sys.stderr)
+    except Exception as exc:
+        print(f"[thumbnail] commons search failed: {exc!r}", file=sys.stderr)
         return None
 
     for title in candidates:
@@ -82,12 +87,14 @@ def find_commons_photo(person_name):
             if not imageinfo:
                 continue
             license_short = imageinfo.get("extmetadata", {}).get("LicenseShortName", {}).get("value", "").lower()
+            print(f"[thumbnail] {title!r} license={license_short!r}", file=sys.stderr)
             if not any(marker in license_short for marker in SAFE_LICENSE_MARKERS):
                 continue
             img_resp = requests.get(imageinfo["url"], headers=HEADERS, timeout=20)
             if img_resp.status_code == 200:
                 return Image.open(io.BytesIO(img_resp.content)).convert("RGBA")
-        except Exception:
+        except Exception as exc:
+            print(f"[thumbnail] checking {title!r} failed: {exc!r}", file=sys.stderr)
             continue
     return None
 
