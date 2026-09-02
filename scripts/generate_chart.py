@@ -1,14 +1,27 @@
 #!/usr/bin/env python3
 import argparse
+import os
 import sys
 
 import matplotlib
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import yfinance as yf
 
 matplotlib.use("Agg")
 
 COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed"]
+
+KOREAN_FONT_CANDIDATES = [
+    "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+]
+for _font_path in KOREAN_FONT_CANDIDATES:
+    if os.path.exists(_font_path):
+        fm.fontManager.addfont(_font_path)
+        plt.rcParams["font.family"] = fm.FontProperties(fname=_font_path).get_name()
+        break
+plt.rcParams["axes.unicode_minus"] = False
 
 
 def main():

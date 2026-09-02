@@ -19,6 +19,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install Korean font for chart rendering
+        run: sudo apt-get update && sudo apt-get install -y fonts-nanum
+
       - run: pip install -r requirements.txt
 
       - name: Generate chart + upload WordPress draft
