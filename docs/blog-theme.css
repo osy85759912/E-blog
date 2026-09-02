@@ -1,0 +1,98 @@
+/* brotheroh.com 커스텀 테마 CSS - 초록/민트 무드
+   적용 방법: 워드프레스 관리자 → 외모(Appearance) → 사용자 정의(Customize) → 추가 CSS(Additional CSS)
+   에 이 파일 내용을 그대로 붙여넣고 저장하면 바로 반영됩니다.
+   (테마별로 클래스명이 조금 다를 수 있어서, 안 먹는 부분은 스크린샷 보내주시면 맞춰드릴게요) */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+
+:root {
+  --brand-green: #16a34a;
+  --brand-mint: #10b981;
+  --brand-green-light: #dcfce7;
+  --brand-green-dark: #166534;
+  --text-dark: #1a2e22;
+}
+
+body, button, input, textarea {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.01em;
+}
+
+body {
+  background-color: #f6fbf7;
+  color: var(--text-dark);
+}
+
+/* 상단 헤더 / 사이트 제목 */
+.site-title, .site-title a {
+  color: var(--brand-green-dark) !important;
+  font-weight: 800;
+}
+
+/* 링크 색상 */
+a {
+  color: var(--brand-mint);
+}
+a:hover {
+  color: var(--brand-green-dark);
+}
+
+/* 버튼류 */
+.button, button, input[type="submit"] {
+  background-color: var(--brand-green) !important;
+  border-color: var(--brand-green) !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  font-weight: 600;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.button:hover, button:hover {
+  background-color: var(--brand-green-dark) !important;
+  transform: translateY(-1px);
+}
+
+/* 글 목록 카드 스타일 */
+article.post, .post {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(22, 163, 74, 0.08);
+  border: 1px solid var(--brand-green-light);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+article.post:hover, .post:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.15);
+}
+
+/* 글 제목 */
+.entry-title, .entry-title a {
+  font-weight: 800 !important;
+  color: var(--text-dark) !important;
+  line-height: 1.35;
+}
+
+/* 카테고리 / 태그 뱃지 */
+.cat-links a, .tags-links a {
+  display: inline-block;
+  background: var(--brand-green-light);
+  color: var(--brand-green-dark) !important;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* 모바일 여백 / 가독성 */
+@media (max-width: 600px) {
+  article.post, .post {
+    padding: 18px;
+    border-radius: 16px;
+  }
+  body {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+}
