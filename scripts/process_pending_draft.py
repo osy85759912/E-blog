@@ -25,7 +25,7 @@ def process(path):
 
     title = meta["title"]
     tickers = meta.get("tickers")
-    category = meta.get("category", "주식")
+    category = meta.get("category", "미국주식")
     person = meta.get("thumbnail_person")
     base = os.path.splitext(os.path.basename(path))[0]
     content_file = f"/tmp/{base}.html"

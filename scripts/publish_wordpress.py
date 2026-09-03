@@ -65,7 +65,7 @@ def main():
     parser.add_argument("--content-file", required=True, help="HTML body")
     parser.add_argument("--image", help="chart image, embedded in the body")
     parser.add_argument("--thumbnail", help="cover/thumbnail image (logo+person composite); used as the featured image")
-    parser.add_argument("--category", default="주식", help="category name to assign (default: 주식)")
+    parser.add_argument("--category", default="미국주식", help="category name to assign (default: 미국주식)")
     args = parser.parse_args()
 
     site, auth = wp_env()

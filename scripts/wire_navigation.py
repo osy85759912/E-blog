@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One-off: replace the auto-generated page-list navigation with our
-category structure (일상>육아/맛집/여행, 공부>주식), and stop forcing
-the nav into an always-collapsed overlay/hamburger menu."""
+category structure (일상>육아/맛집/여행, 공부>국내주식/미국주식), and
+stop forcing the nav into an always-collapsed overlay/hamburger menu."""
 import os
 import sys
 
@@ -9,7 +9,7 @@ import requests
 
 STRUCTURE = {
     "일상": ["육아", "맛집", "여행"],
-    "공부": ["주식"],
+    "공부": ["국내주식", "미국주식"],
 }
 NAV_ID = 4
 HEADER_PART_ID = "twentytwentyfive//vertical-header"
