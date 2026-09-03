@@ -1,0 +1,33 @@
+name: Update Template Heading
+
+on:
+  workflow_dispatch:
+    inputs:
+      template_id:
+        description: 'Template ID, e.g. "twentytwentyfive//home"'
+        required: true
+      new_text:
+        description: "New heading text"
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Update heading
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          python scripts/update_template_heading.py \
+            --template-id "${{ github.event.inputs.template_id }}" \
+            --new-text "${{ github.event.inputs.new_text }}"
