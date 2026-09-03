@@ -30,22 +30,25 @@ def main():
                 idx = content.find("wp:navigation")
                 print("    snippet:", content[max(0, idx - 20): idx + 300])
 
-    resp = requests.get(f"{site}/wp-json/wp/v2/template-parts", auth=auth, timeout=30)
+    resp = requests.get(f"{site}/wp-json/wp/v2/template-parts", auth=auth, params={"context": "edit"}, timeout=30)
     print(f"GET /template-parts -> {resp.status_code}")
     if resp.status_code == 200:
         for t in resp.json():
-            has_nav = "wp:navigation" in (t.get("content", {}).get("raw") or "")
-            print(f"  part slug={t['slug']} area={t.get('area')} has_navigation_block={has_nav}")
+            content = t.get("content", {}).get("raw") or ""
+            has_nav = "wp:navigation" in content
+            print(f"  part id={t['id']} slug={t['slug']} area={t.get('area')} has_navigation_block={has_nav}")
             if has_nav:
-                content = t["content"]["raw"]
-                idx = content.find("wp:navigation")
-                print("    snippet:", content[max(0, idx - 20): idx + 300])
+                print("    FULL CONTENT:")
+                print(content)
 
-    resp = requests.get(f"{site}/wp-json/wp/v2/navigation", auth=auth, params={"status": "any"}, timeout=30)
+    resp = requests.get(
+        f"{site}/wp-json/wp/v2/navigation", auth=auth, params={"status": "any", "context": "edit"}, timeout=30
+    )
     print(f"GET /navigation -> {resp.status_code}")
     if resp.status_code == 200:
         for n in resp.json():
-            print(f"  navigation id={n['id']} title={n['title']['raw']!r} status={n['status']}")
+            title = n.get("title", {}).get("raw") or n.get("title", {}).get("rendered")
+            print(f"  navigation id={n['id']} title={title!r} status={n['status']}")
 
 
 if __name__ == "__main__":
