@@ -78,6 +78,18 @@ def company_name_for_ticker(ticker):
         return None
 
 
+def fetch_percent_change(ticker):
+    try:
+        hist = yf.Ticker(ticker).history(period="5d")["Close"]
+        if len(hist) < 2:
+            return None
+        last, prev = hist.iloc[-1], hist.iloc[-2]
+        return (last - prev) / prev * 100
+    except Exception as exc:
+        print(f"[thumbnail] fetch_percent_change({ticker}) failed: {exc!r}", file=sys.stderr)
+        return None
+
+
 def domain_for_ticker(ticker):
     try:
         info = yf.Ticker(ticker).info
@@ -231,7 +243,6 @@ def main():
     parser.add_argument("--ticker", required=True, help="primary ticker, used to look up the company logo")
     parser.add_argument("--person", help="person name to look up on Wikimedia Commons (optional)")
     parser.add_argument("--title", required=True, help="post title, shown as a bold caption across the bottom")
-    parser.add_argument("--badge", default="브라더오", help="small top-left brand badge text")
     parser.add_argument(
         "--mood",
         default=DEFAULT_MOOD,
@@ -261,18 +272,11 @@ def main():
 
     draw = ImageDraw.Draw(canvas)
 
-    badge_font = load_font(30)
-    pad_x, pad_y = 18, 10
-    badge_h = 30 + pad_y * 2
-
-    badge_w = draw.textlength(args.badge, font=badge_font) + pad_x * 2
-    draw.rounded_rectangle([28, 28, 28 + badge_w, 28 + badge_h], radius=10, fill=WHITE)
-    draw.text((28 + pad_x, 28 + pad_y - 2), args.badge, font=badge_font, fill=darken(mood_top, 0.8))
-
-    mood_x = 28 + badge_w + 12
-    mood_w = draw.textlength(args.mood, font=badge_font) + pad_x * 2
-    draw.rounded_rectangle([mood_x, 28, mood_x + mood_w, 28 + badge_h], radius=10, fill=darken(mood_top, 0.8))
-    draw.text((mood_x + pad_x, 28 + pad_y - 2), args.mood, font=badge_font, fill=WHITE)
+    pct = fetch_percent_change(args.ticker)
+    if pct is not None:
+        pct_text = f"{pct:+.1f}%"
+        pct_font = load_font(64)
+        draw.text((30, 26), pct_text, font=pct_font, fill=WHITE, stroke_width=2, stroke_fill=darken(mood_top, 0.6))
 
     bar_h = 190
     draw.rectangle([0, CANVAS_SIZE[1] - bar_h, CANVAS_SIZE[0], CANVAS_SIZE[1]], fill=BAR_BG)
