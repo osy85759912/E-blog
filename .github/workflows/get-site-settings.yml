@@ -1,7 +1,12 @@
 name: Get Site Settings
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      expect_title:
+        description: "Check whether the live title equals this (optional)"
+        required: false
+        default: ""
 
 jobs:
   get:
@@ -15,9 +20,14 @@ jobs:
 
       - run: pip install requests
 
-      - name: Print settings (base64, to dodge secret-masking false positives)
+      - name: Check settings
         env:
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
-        run: python scripts/get_site_settings.py
+        run: |
+          ARGS=()
+          if [ -n "${{ github.event.inputs.expect_title }}" ]; then
+            ARGS+=(--expect-title "${{ github.event.inputs.expect_title }}")
+          fi
+          python scripts/get_site_settings.py "${ARGS[@]}"

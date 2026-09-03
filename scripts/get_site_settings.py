@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Debug helper: print current WordPress site title/tagline."""
+"""Debug helper: check the current WordPress site title/tagline without ever
+printing the raw value (a prior version printed it -- and even a base64
+encoding of it -- but GitHub Actions masks any log text matching a secret's
+value AND its base64 form, and this site's old title happens to equal one
+of our secrets, so both attempts came back as '***'). Print lengths and a
+boolean comparison instead."""
+import argparse
 import os
 import sys
 
@@ -16,12 +22,18 @@ def wp_env():
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--expect-title", help="print whether the live title equals this, instead of the raw value")
+    args = parser.parse_args()
+
     site, auth = wp_env()
     resp = requests.get(f"{site}/wp-json/wp/v2/settings", auth=auth, timeout=30)
     resp.raise_for_status()
     data = resp.json()
-    print("TITLE_B64:", __import__("base64").b64encode(data["title"].encode()).decode())
-    print("TAGLINE_B64:", __import__("base64").b64encode(data["description"].encode()).decode())
+    print("title_length:", len(data["title"]))
+    print("tagline_length:", len(data["description"]))
+    if args.expect_title:
+        print("title_matches_expected:", data["title"] == args.expect_title)
 
 
 if __name__ == "__main__":
