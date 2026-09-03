@@ -402,10 +402,14 @@ def main():
         cursor_x -= portrait.width
         paste_with_shadow(canvas, portrait, (cursor_x, py), radius=portrait.width // 2, blur=16)
 
-    # title caption
+    # title caption -- the badge chips sit in the bottom-right corner, in the
+    # same vertical band as the caption text, so the wrap width must leave
+    # room for them or the last line can run straight under the artwork.
     accent_color = style["accent"]
     cap_font = load_font(46)
-    lines = wrap_text(ImageDraw.Draw(canvas), args.title, cap_font, CANVAS_SIZE[0] - 90, max_lines=2)
+    caption_right_edge = cursor_x - 30 if (logo_img or person_img) else CANVAS_SIZE[0] - 40
+    max_caption_width = caption_right_edge - 62
+    lines = wrap_text(ImageDraw.Draw(canvas), args.title, cap_font, max_caption_width, max_lines=2)
     line_h = 58
     total_h = line_h * len(lines)
     y = CANVAS_SIZE[1] - 36 - total_h
