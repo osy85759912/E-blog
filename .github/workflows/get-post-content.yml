@@ -1,0 +1,36 @@
+name: Get Post Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: "Post ID"
+        required: true
+      images_only:
+        description: "Only print <img> tags (true/false)"
+        required: false
+        default: "true"
+
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Get content
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          ARGS="--post-id ${{ github.event.inputs.post_id }}"
+          if [ "${{ github.event.inputs.images_only }}" = "true" ]; then
+            ARGS="$ARGS --images-only"
+          fi
+          eval python scripts/get_post_content.py $ARGS
