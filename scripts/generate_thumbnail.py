@@ -168,6 +168,26 @@ def fetch_logo(ticker):
     return fetch_favicon(domain_for_ticker(ticker))
 
 
+def normalize_name(text):
+    text = text.lower()
+    text = re.sub(r"[-.'’]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def photo_matches_person(person_name, extmetadata):
+    """Commons search ranks by text relevance, not subject identity -- it can
+    return a same-license photo of a completely different person (seen in
+    practice: searching a Samsung exec surfaced a Korean politician's photo
+    because both pages shared unrelated keywords). Require the person's name
+    to actually appear in the photo's own metadata before trusting it."""
+    combined = " ".join(
+        extmetadata.get(key, {}).get("value", "") for key in ("Categories", "ImageDescription", "ObjectName")
+    )
+    norm_name = normalize_name(person_name)
+    norm_text = normalize_name(combined)
+    return norm_name in norm_text or norm_name.replace(" ", "") in norm_text.replace(" ", "")
+
+
 def find_commons_photo(person_name):
     try:
         search = requests.get(
@@ -207,10 +227,17 @@ def find_commons_photo(person_name):
             imageinfo = (page.get("imageinfo") or [None])[0]
             if not imageinfo:
                 continue
-            license_raw = imageinfo.get("extmetadata", {}).get("LicenseShortName", {}).get("value", "").lower()
+            extmetadata = imageinfo.get("extmetadata", {})
+            license_raw = extmetadata.get("LicenseShortName", {}).get("value", "").lower()
             license_short = license_raw.replace("-", " ")
-            print(f"[thumbnail] {title!r} license={license_raw!r}", file=sys.stderr)
+            matches_person = photo_matches_person(person_name, extmetadata)
+            print(
+                f"[thumbnail] {title!r} license={license_raw!r} matches_person={matches_person}",
+                file=sys.stderr,
+            )
             if not any(marker in license_short for marker in SAFE_LICENSE_MARKERS):
+                continue
+            if not matches_person:
                 continue
             img_resp = requests.get(imageinfo["url"], headers=HEADERS, timeout=20)
             if img_resp.status_code == 200:
