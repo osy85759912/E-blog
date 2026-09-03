@@ -1,0 +1,40 @@
+name: Update Site Settings
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "New site title (optional)"
+        required: false
+        default: ""
+      tagline:
+        description: "New site tagline (optional)"
+        required: false
+        default: ""
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Update settings
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          ARGS=()
+          if [ -n "${{ github.event.inputs.title }}" ]; then
+            ARGS+=(--title "${{ github.event.inputs.title }}")
+          fi
+          if [ -n "${{ github.event.inputs.tagline }}" ]; then
+            ARGS+=(--tagline "${{ github.event.inputs.tagline }}")
+          fi
+          python scripts/update_site_settings.py "${ARGS[@]}"
