@@ -410,6 +410,7 @@ def main():
     caption_right_edge = cursor_x - 30 if (logo_img or person_img) else CANVAS_SIZE[0] - 40
     max_caption_width = caption_right_edge - 62
     lines = wrap_text(ImageDraw.Draw(canvas), args.title, cap_font, max_caption_width, max_lines=2)
+    print(f"[thumbnail] cursor_x={cursor_x} max_caption_width={max_caption_width} lines={lines}", file=sys.stderr)
     line_h = 58
     total_h = line_h * len(lines)
     y = CANVAS_SIZE[1] - 36 - total_h
