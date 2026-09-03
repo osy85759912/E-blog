@@ -68,8 +68,16 @@ def main():
     new_chart_url = upload_media(site, auth, chart_path)
 
     content = post["content"]["raw"]
-    pattern = r'<img src="[^"]*" alt="관련 종목 주가 차트" />'
-    new_content, count = re.subn(pattern, f'<img src="{new_chart_url}" alt="관련 종목 주가 차트" />', content, count=1)
+    # match any attribute order/extras (e.g. the responsive style="..."
+    # publish_wordpress.py adds) rather than requiring the exact original
+    # tag shape, so the src swap always lands in place instead of appending
+    # a duplicate image when the tag doesn't look exactly as expected.
+    pattern = r'<img[^>]*alt="관련 종목 주가 차트"[^>]*/>'
+
+    def swap_src(match):
+        return re.sub(r'src="[^"]*"', f'src="{new_chart_url}"', match.group(), count=1)
+
+    new_content, count = re.subn(pattern, swap_src, content, count=1)
     if count == 0:
         new_content = content + f'\n<img src="{new_chart_url}" alt="관련 종목 주가 차트" />\n'
         print("no existing chart <img> found, appended new one instead")
