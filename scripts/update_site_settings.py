@@ -32,9 +32,23 @@ def main():
 
     site, auth = wp_env()
     resp = requests.post(f"{site}/wp-json/wp/v2/settings", auth=auth, json=payload, timeout=30)
-    resp.raise_for_status()
-    updated = resp.json()
-    print(f"title={updated['title']!r} tagline={updated['description']!r}")
+    print(f"status_code: {resp.status_code}")
+    try:
+        updated = resp.json()
+    except ValueError:
+        print("response was not JSON, first 500 chars of body:")
+        print(resp.text[:500])
+        sys.exit(1)
+    if "title" in payload:
+        print(f"title_length: {len(updated.get('title', ''))}  matches_requested: {updated.get('title') == payload['title']}")
+    if "description" in payload:
+        print(
+            f"tagline_length: {len(updated.get('description', ''))}  "
+            f"matches_requested: {updated.get('description') == payload['description']}"
+        )
+    if resp.status_code >= 400:
+        print("error response keys:", list(updated.keys()) if isinstance(updated, dict) else type(updated))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
