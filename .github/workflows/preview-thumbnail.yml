@@ -41,7 +41,9 @@ jobs:
       - name: Generate thumbnail
         run: |
           mkdir -p scratch
-          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --out scratch/preview.png)
+          OUT="scratch/preview-${{ github.run_id }}.png"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --out "$OUT")
           if [ -n "${{ github.event.inputs.person }}" ]; then
             ARGS+=(--person "${{ github.event.inputs.person }}")
           fi
@@ -49,13 +51,17 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: thumbnail-preview
-          path: scratch/preview.png
+          name: thumbnail-preview-${{ github.run_id }}
+          path: ${{ env.OUT }}
 
       - name: Commit preview image for easy viewing
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f scratch/preview.png
-          git diff --cached --quiet || git commit -m "Update thumbnail preview render"
-          git push
+          git add -f "$OUT"
+          git commit -m "Add thumbnail preview render ($OUT)"
+          for i in 1 2 3 4; do
+            git push && break
+            git pull --rebase origin "${{ github.ref_name }}"
+            sleep $((i * 2))
+          done
