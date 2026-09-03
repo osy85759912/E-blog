@@ -1,0 +1,49 @@
+name: Preview Thumbnail
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticker:
+        description: "Ticker for logo lookup"
+        required: true
+        default: "AAPL"
+      person:
+        description: "Person name for Commons photo lookup (optional)"
+        required: false
+        default: ""
+      title:
+        description: "Post title for the caption"
+        required: true
+        default: "썸네일 디자인 미리보기 테스트"
+      mood:
+        description: "호재/악재/패닉/중립"
+        required: true
+        default: "호재"
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install fonts + cairo (thumbnail rendering)
+        run: sudo apt-get update && sudo apt-get install -y fonts-nanum libcairo2
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate thumbnail
+        run: |
+          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --out preview.png)
+          if [ -n "${{ github.event.inputs.person }}" ]; then
+            ARGS+=(--person "${{ github.event.inputs.person }}")
+          fi
+          python scripts/generate_thumbnail.py "${ARGS[@]}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thumbnail-preview
+          path: preview.png
