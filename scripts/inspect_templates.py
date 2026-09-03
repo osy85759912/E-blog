@@ -2,6 +2,7 @@
 """Debug helper: dump templates/template-parts and any wp_navigation
 posts so we can see how (or whether) the header wires up a menu."""
 import os
+import re
 import sys
 
 import requests
@@ -19,16 +20,14 @@ def wp_env():
 def main():
     site, auth = wp_env()
 
-    resp = requests.get(f"{site}/wp-json/wp/v2/templates", auth=auth, timeout=30)
+    resp = requests.get(f"{site}/wp-json/wp/v2/templates", auth=auth, params={"context": "edit"}, timeout=30)
     print(f"GET /templates -> {resp.status_code}")
     if resp.status_code == 200:
         for t in resp.json():
-            has_nav = "wp:navigation" in (t.get("content", {}).get("raw") or "")
-            print(f"  template slug={t['slug']} has_navigation_block={has_nav}")
-            if has_nav:
-                content = t["content"]["raw"]
-                idx = content.find("wp:navigation")
-                print("    snippet:", content[max(0, idx - 20): idx + 300])
+            content = t.get("content", {}).get("raw") or ""
+            has_nav = "wp:navigation" in content
+            parts = re.findall(r'wp:template-part\s+(\{[^}]*\})', content)
+            print(f"  template id={t['id']} slug={t['slug']} has_navigation_block={has_nav} template_parts={parts}")
 
     resp = requests.get(f"{site}/wp-json/wp/v2/template-parts", auth=auth, params={"context": "edit"}, timeout=30)
     print(f"GET /template-parts -> {resp.status_code}")
@@ -48,7 +47,8 @@ def main():
     if resp.status_code == 200:
         for n in resp.json():
             title = n.get("title", {}).get("raw") or n.get("title", {}).get("rendered")
-            print(f"  navigation id={n['id']} title={title!r} status={n['status']}")
+            content = n.get("content", {}).get("raw", "")
+            print(f"  navigation id={n['id']} title={title!r} status={n['status']} content={content!r}")
 
 
 if __name__ == "__main__":
