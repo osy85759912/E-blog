@@ -1,0 +1,27 @@
+name: Get Post Media URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: "Post ID to look up featured media for"
+        required: true
+
+jobs:
+  get-url:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Print featured media URL
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python scripts/get_post_media_url.py --post-id "${{ github.event.inputs.post_id }}"
