@@ -8,6 +8,7 @@ E-blog 리포지토리(osy85759912/e-blog, 브랜치 claude/us-market-blog-autom
 
 이 환경은 네트워크가 제한되어 있어 워드프레스 API나 주가 데이터에 직접 접근할 수 없다. 그래서 초안 작성까지만 하고, 실제 차트 생성·워드프레스 업로드는 GitHub Actions가 처리한다 (`.github/workflows/publish-draft.yml` 참고).
 
+0. 시작 전에 `git pull --rebase origin claude/us-market-blog-automation-ke4cp6` 먼저 받는다 (GitHub Actions가 전날 "Move processed draft to published/" 같은 커밋을 남겨뒀을 수 있어서, 안 받고 바로 푸시하면 거부된다).
 1. 웹 검색으로 지난 밤(미국 동부시간 기준 정규장~애프터마켓) 미국 증시 주요 이슈/가십을 조사한다. 단순 지수 등락이 아니라 화제성 있는 사건 하나를 고른다 (실적 쇼크, CEO 발언 논란, 급등락 종목, 소셜에서 화제된 종목 등).
 2. `docs/style_guide.md`를 읽고 그 톤/구조/디스클레이머 규칙을 그대로 따라 글을 작성한다. 제목은 스타일 가이드의 클릭률 공식을 적용한다.
 3. 이번 사건의 핵심 종목/섹터 티커 1~3개를 정한다.
@@ -15,6 +16,7 @@ E-blog 리포지토리(osy85759912/e-blog, 브랜치 claude/us-market-blog-autom
    ```
    ---
    title: <제목>
+   category: 미국주식
    tickers: <티커1>,<티커2>
    thumbnail_person: <사건의 핵심 인물 실명, 있으면> (예: Tim Cook)
    ---
