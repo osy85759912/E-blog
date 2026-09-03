@@ -4,7 +4,6 @@ category structure (일상>육아/맛집/여행, 공부>주식), and stop forcin
 the nav into an always-collapsed overlay/hamburger menu."""
 import os
 import sys
-from urllib.parse import quote
 
 import requests
 
@@ -76,7 +75,7 @@ def main():
     resp.raise_for_status()
     print(f"updated navigation id={NAV_ID}")
 
-    part_url = f"{site}/wp-json/wp/v2/template-parts/{quote(HEADER_PART_ID, safe='')}"
+    part_url = f"{site}/wp-json/wp/v2/template-parts/{HEADER_PART_ID}"
     resp = requests.get(part_url, auth=auth, params={"context": "edit"}, timeout=30)
     resp.raise_for_status()
     part_content = resp.json()["content"]["raw"]
