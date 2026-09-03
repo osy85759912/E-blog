@@ -20,6 +20,9 @@ on:
         required: true
         default: "호재"
 
+permissions:
+  contents: write
+
 jobs:
   preview:
     runs-on: ubuntu-latest
@@ -37,7 +40,8 @@ jobs:
 
       - name: Generate thumbnail
         run: |
-          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --out preview.png)
+          mkdir -p scratch
+          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --out scratch/preview.png)
           if [ -n "${{ github.event.inputs.person }}" ]; then
             ARGS+=(--person "${{ github.event.inputs.person }}")
           fi
@@ -46,4 +50,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: thumbnail-preview
-          path: preview.png
+          path: scratch/preview.png
+
+      - name: Commit preview image for easy viewing
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f scratch/preview.png
+          git diff --cached --quiet || git commit -m "Update thumbnail preview render"
+          git push
