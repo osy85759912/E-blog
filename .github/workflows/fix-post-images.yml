@@ -1,0 +1,27 @@
+name: Fix Post Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      title_search:
+        description: "Substring to find the post(s) by title"
+        required: true
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Add responsive style to post images
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python scripts/fix_post_images.py --title-search "${{ github.event.inputs.title_search }}"

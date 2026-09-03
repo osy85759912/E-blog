@@ -73,15 +73,17 @@ def main():
     with open(args.content_file, encoding="utf-8") as f:
         content_html = f.read()
 
+    img_style = "max-width:100%;height:auto;display:block;margin:16px auto;"
+
     thumb_id = None
     if args.thumbnail:
         thumb_id, thumb_url = upload_media(site, auth, args.thumbnail)
-        content_html = f'<img src="{thumb_url}" alt="{args.title}" />\n' + content_html
+        content_html = f'<img src="{thumb_url}" alt="{args.title}" style="{img_style}" />\n' + content_html
 
     chart_id = None
     if args.image:
         chart_id, chart_url = upload_media(site, auth, args.image)
-        content_html += f'\n<img src="{chart_url}" alt="관련 종목 주가 차트" />\n'
+        content_html += f'\n<img src="{chart_url}" alt="관련 종목 주가 차트" style="{img_style}" />\n'
 
     category_id = get_category_id_by_name(site, auth, args.category) if args.category else None
 
