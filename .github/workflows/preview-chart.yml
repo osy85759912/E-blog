@@ -1,0 +1,55 @@
+name: Preview Chart
+
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "Comma-separated tickers"
+        required: true
+        default: "005930.KS,000660.KS"
+      period:
+        description: "Period"
+        required: false
+        default: "6mo"
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install fonts (chart rendering)
+        run: sudo apt-get update && sudo apt-get install -y fonts-nanum
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate chart
+        run: |
+          mkdir -p scratch
+          OUT="scratch/chart-${{ github.run_id }}.png"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          python scripts/generate_chart.py --tickers "${{ github.event.inputs.tickers }}" --period "${{ github.event.inputs.period }}" --out "$OUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chart-preview-${{ github.run_id }}
+          path: ${{ env.OUT }}
+
+      - name: Commit preview image for easy viewing
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f "$OUT"
+          git commit -m "Add chart preview render ($OUT)"
+          for i in 1 2 3 4; do
+            git push && break
+            git pull --rebase origin "${{ github.ref_name }}"
+            sleep $((i * 2))
+          done
