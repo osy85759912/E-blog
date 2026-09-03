@@ -16,10 +16,30 @@ import yfinance as yf
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 CANVAS_SIZE = (1200, 630)
-BRAND_GREEN = (22, 138, 76)
-FALLBACK_PANEL = (12, 90, 50)
 BAR_BG = (10, 22, 16)
 WHITE = (255, 255, 255)
+
+# mood -> (gradient top, gradient bottom, badge label)
+MOOD_STYLES = {
+    "호재": ((27, 158, 88), (120, 205, 105)),
+    "악재": ((176, 48, 32), (219, 108, 45)),
+    "패닉": ((28, 6, 6), (110, 18, 18)),
+    "중립": ((71, 85, 105), (105, 120, 145)),
+}
+DEFAULT_MOOD = "중립"
+
+
+def darken(color, factor=0.55):
+    return tuple(int(c * factor) for c in color)
+
+
+def build_gradient(size, top, bottom):
+    img = Image.new("RGB", size, top)
+    draw = ImageDraw.Draw(img)
+    for y in range(size[1]):
+        t = y / size[1]
+        draw.line([(0, y), (size[0], y)], fill=tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(3)))
+    return img
 
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 HEADERS = {"User-Agent": "brotheroh-blog-thumbnail/1.0 (contact: osy85759912@gmail.com)"}
@@ -212,18 +232,25 @@ def main():
     parser.add_argument("--person", help="person name to look up on Wikimedia Commons (optional)")
     parser.add_argument("--title", required=True, help="post title, shown as a bold caption across the bottom")
     parser.add_argument("--badge", default="브라더오", help="small top-left brand badge text")
+    parser.add_argument(
+        "--mood",
+        default=DEFAULT_MOOD,
+        choices=list(MOOD_STYLES.keys()),
+        help="news tone, colors the thumbnail (호재/악재/패닉/중립)",
+    )
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
+    mood_top, mood_bottom = MOOD_STYLES[args.mood]
     half = CANVAS_SIZE[0] // 2
-    canvas = Image.new("RGB", CANVAS_SIZE, BRAND_GREEN).convert("RGBA")
+    canvas = build_gradient(CANVAS_SIZE, mood_top, mood_bottom).convert("RGBA")
 
     person_img = find_commons_photo(args.person) if args.person else None
     if person_img:
         fitted = ImageOps.fit(person_img.convert("RGB"), (half, CANVAS_SIZE[1]), Image.LANCZOS)
         canvas.paste(fitted, (half, 0))
     else:
-        ImageDraw.Draw(canvas).rectangle([half, 0, CANVAS_SIZE[0], CANVAS_SIZE[1]], fill=FALLBACK_PANEL)
+        ImageDraw.Draw(canvas).rectangle([half, 0, CANVAS_SIZE[0], CANVAS_SIZE[1]], fill=darken(mood_top))
 
     logo_img = fetch_logo(args.ticker)
     if logo_img:
@@ -236,10 +263,16 @@ def main():
 
     badge_font = load_font(30)
     pad_x, pad_y = 18, 10
-    badge_w = draw.textlength(args.badge, font=badge_font) + pad_x * 2
     badge_h = 30 + pad_y * 2
+
+    badge_w = draw.textlength(args.badge, font=badge_font) + pad_x * 2
     draw.rounded_rectangle([28, 28, 28 + badge_w, 28 + badge_h], radius=10, fill=WHITE)
-    draw.text((28 + pad_x, 28 + pad_y - 2), args.badge, font=badge_font, fill=BRAND_GREEN)
+    draw.text((28 + pad_x, 28 + pad_y - 2), args.badge, font=badge_font, fill=darken(mood_top, 0.8))
+
+    mood_x = 28 + badge_w + 12
+    mood_w = draw.textlength(args.mood, font=badge_font) + pad_x * 2
+    draw.rounded_rectangle([mood_x, 28, mood_x + mood_w, 28 + badge_h], radius=10, fill=darken(mood_top, 0.8))
+    draw.text((mood_x + pad_x, 28 + pad_y - 2), args.mood, font=badge_font, fill=WHITE)
 
     bar_h = 190
     draw.rectangle([0, CANVAS_SIZE[1] - bar_h, CANVAS_SIZE[0], CANVAS_SIZE[1]], fill=BAR_BG)

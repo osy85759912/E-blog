@@ -27,6 +27,7 @@ def process(path):
     tickers = meta.get("tickers")
     category = meta.get("category", "미국주식")
     person = meta.get("thumbnail_person")
+    mood = meta.get("mood", "중립")
     base = os.path.splitext(os.path.basename(path))[0]
     content_file = f"/tmp/{base}.html"
 
@@ -62,6 +63,8 @@ def process(path):
             primary_ticker,
             "--title",
             title,
+            "--mood",
+            mood,
             "--out",
             thumb_path,
         ]
