@@ -31,8 +31,20 @@ def main():
         sys.exit("nothing to update -- pass --title and/or --tagline")
 
     site, auth = wp_env()
-    resp = requests.post(f"{site}/wp-json/wp/v2/settings", auth=auth, json=payload, timeout=30)
+    import random
+
+    cache_bust = random.randint(1, 10**9)
+    resp = requests.post(
+        f"{site}/wp-json/wp/v2/settings",
+        auth=auth,
+        json=payload,
+        params={"_": cache_bust},
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"},
+        timeout=30,
+    )
     print(f"status_code: {resp.status_code}")
+    print(f"response headers of interest: age={resp.headers.get('age')!r} x-cache={resp.headers.get('x-cache')!r} "
+          f"cf-cache-status={resp.headers.get('cf-cache-status')!r} x-litespeed-cache={resp.headers.get('x-litespeed-cache')!r}")
     try:
         updated = resp.json()
     except ValueError:
