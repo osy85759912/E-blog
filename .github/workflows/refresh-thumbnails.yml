@@ -1,7 +1,12 @@
 name: Refresh Thumbnails
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma-separated published/*.md basenames to limit to (blank = all real posts)"
+        required: false
+        default: ""
 
 jobs:
   refresh:
@@ -23,4 +28,9 @@ jobs:
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
-        run: python scripts/refresh_thumbnails.py
+        run: |
+          if [ -n "${{ github.event.inputs.only }}" ]; then
+            python scripts/refresh_thumbnails.py --only "${{ github.event.inputs.only }}"
+          else
+            python scripts/refresh_thumbnails.py
+          fi

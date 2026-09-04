@@ -3,6 +3,7 @@
 stock stat design) for every already-published real post, and swap it into
 both the post's featured_media and the inline cover <img> at the top of the
 body, matched by title search."""
+import argparse
 import glob
 import mimetypes
 import os
@@ -61,6 +62,20 @@ def find_post(site, auth, title):
         f"{site}/wp-json/wp/v2/posts",
         auth=auth,
         params={"search": title, "status": "any", "context": "edit", "per_page": 10},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    for post in resp.json():
+        if post["title"]["raw"] == title:
+            return post
+
+    # the "search" param can come up empty for titles containing characters
+    # like "-4%" (seen with the Snowflake post) even though the post exists
+    # -- fall back to an unfiltered listing and match client-side.
+    resp = requests.get(
+        f"{site}/wp-json/wp/v2/posts",
+        auth=auth,
+        params={"status": "any", "context": "edit", "per_page": 100},
         timeout=30,
     )
     resp.raise_for_status()
@@ -127,13 +142,22 @@ def refresh_one(site, auth, path):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--only", help="comma-separated basenames (e.g. 2026-09-03.md) to limit the refresh to, default: all real posts"
+    )
+    args = parser.parse_args()
+
     site, auth = wp_env()
     files = sorted(
         p for p in glob.glob(f"{PUBLISHED_DIR}/*.md")
         if REAL_POST_RE.match(os.path.basename(p))
     )
+    if args.only:
+        wanted = {name.strip() for name in args.only.split(",") if name.strip()}
+        files = [p for p in files if os.path.basename(p) in wanted]
     if not files:
-        sys.exit("no real published posts found")
+        sys.exit("no matching published posts found")
 
     for path in files:
         refresh_one(site, auth, path)
