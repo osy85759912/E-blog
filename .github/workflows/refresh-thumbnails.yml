@@ -1,0 +1,26 @@
+name: Refresh Thumbnails
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install fonts + cairo (thumbnail rendering)
+        run: sudo apt-get update && sudo apt-get install -y fonts-nanum libcairo2
+
+      - run: pip install -r requirements.txt
+
+      - name: Regenerate thumbnails for all live posts
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python scripts/refresh_thumbnails.py
