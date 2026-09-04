@@ -56,6 +56,7 @@ def process(path):
         )
         publish_cmd += ["--image", chart_path]
 
+        market = "kr" if category == "국내주식" else "us"
         thumb_cmd = [
             sys.executable,
             "scripts/generate_thumbnail.py",
@@ -65,6 +66,8 @@ def process(path):
             title,
             "--mood",
             mood,
+            "--market",
+            market,
             "--out",
             thumb_path,
         ]

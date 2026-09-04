@@ -15,6 +15,9 @@ import requests
 import yfinance as yf
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
+from market_utils import INDEX_TICKERS, fetch_percent_change
+from market_utils import company_name_for_ticker as market_company_name
+
 CANVAS_SIZE = (1200, 630)
 WHITE = (255, 255, 255)
 
@@ -77,24 +80,15 @@ def slugify_company(name):
     return name.replace(" ", "")
 
 
-def company_name_for_ticker(ticker):
+def yfinance_name_for_logo_slug(ticker):
+    """Raw yfinance name, used only to build a Simple Icons slug guess --
+    unlike market_company_name it must return None (not the ticker) on
+    failure so fetch_logo knows to fall back to the ticker itself as a slug."""
     try:
         info = yf.Ticker(ticker).info
         return info.get("shortName") or info.get("longName")
     except Exception as exc:
-        print(f"[thumbnail] company_name_for_ticker({ticker}) failed: {exc!r}", file=sys.stderr)
-        return None
-
-
-def fetch_percent_change(ticker):
-    try:
-        hist = yf.Ticker(ticker).history(period="5d")["Close"]
-        if len(hist) < 2:
-            return None
-        last, prev = hist.iloc[-1], hist.iloc[-2]
-        return (last - prev) / prev * 100
-    except Exception as exc:
-        print(f"[thumbnail] fetch_percent_change({ticker}) failed: {exc!r}", file=sys.stderr)
+        print(f"[thumbnail] yfinance_name_for_logo_slug({ticker}) failed: {exc!r}", file=sys.stderr)
         return None
 
 
@@ -155,7 +149,7 @@ def fetch_favicon(domain):
 
 
 def fetch_logo(ticker):
-    name = company_name_for_ticker(ticker)
+    name = yfinance_name_for_logo_slug(ticker)
     slugs = []
     if name:
         slugs.append(slugify_company(name))
@@ -372,6 +366,12 @@ def main():
         choices=list(MOOD_STYLES.keys()),
         help="news tone, colors the thumbnail (호재/악재/패닉/중립)",
     )
+    parser.add_argument(
+        "--market",
+        default="us",
+        choices=list(INDEX_TICKERS.keys()),
+        help="kr shows 코스피/코스닥 as the index stats, us shows S&P500/나스닥",
+    )
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
@@ -394,20 +394,28 @@ def main():
 
     draw = ImageDraw.Draw(canvas)
 
-    # hero stat: today's percent change, top-left
-    pct = fetch_percent_change(args.ticker)
-    if pct is not None:
-        arrow = "▲" if pct > 0 else ("▼" if pct < 0 else "■")
-        pct_font = load_font(78)
-        arrow_font = load_font(40)
-        label_font = load_font(26, bold=False)
+    # hero stats, top-left: the day's index move(s) -- 코스피/코스닥 for domestic
+    # posts, S&P500/나스닥 for US posts -- plus the specific stock this post is
+    # about, clearly labeled with its name so it's obvious what each number
+    # means (a bare "+22.4%" with no label was confusing).
+    stats = []
+    for index_ticker, index_label in INDEX_TICKERS[args.market]:
+        index_pct = fetch_percent_change(index_ticker)
+        if index_pct is not None:
+            stats.append((index_label, index_pct, False))
 
-        draw_text_with_shadow(canvas, (44, 40), f"{pct:+.1f}%", pct_font, fill=WHITE)
-        draw = ImageDraw.Draw(canvas)
-        num_w = draw.textlength(f"{pct:+.1f}%", font=pct_font)
-        draw_text_with_shadow(canvas, (44 + num_w + 14, 58), arrow, arrow_font, fill=style["accent"])
-        draw = ImageDraw.Draw(canvas)
-        draw.text((46, 128), "오늘 등락률", font=label_font, fill=(255, 255, 255, 205))
+    stock_pct = fetch_percent_change(args.ticker)
+    if stock_pct is not None:
+        stock_name = market_company_name(args.ticker)
+        stats.append((stock_name, stock_pct, True))
+
+    y = 40
+    for i, (label, pct, is_stock) in enumerate(stats):
+        text = f"{label} {pct:+.1f}%"
+        font = load_font(56) if i == 0 else load_font(32)
+        color = style["accent"] if is_stock else WHITE
+        draw_text_with_shadow(canvas, (44, y), text, font, fill=color)
+        y += 68 if i == 0 else 44
 
     # supporting brand marks, bottom-right: logo chip (+ optional portrait)
     logo_img = fetch_logo(args.ticker)

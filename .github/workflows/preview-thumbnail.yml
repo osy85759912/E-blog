@@ -19,6 +19,10 @@ on:
         description: "호재/악재/패닉/중립"
         required: true
         default: "호재"
+      market:
+        description: "kr (코스피/코스닥) or us (S&P500/나스닥)"
+        required: false
+        default: "us"
 
 permissions:
   contents: write
@@ -43,7 +47,7 @@ jobs:
           mkdir -p scratch
           OUT="scratch/preview-${{ github.run_id }}.png"
           echo "OUT=$OUT" >> "$GITHUB_ENV"
-          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --out "$OUT")
+          ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --market "${{ github.event.inputs.market }}" --out "$OUT")
           if [ -n "${{ github.event.inputs.person }}" ]; then
             ARGS+=(--person "${{ github.event.inputs.person }}")
           fi
