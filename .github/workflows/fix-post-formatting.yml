@@ -1,0 +1,27 @@
+name: Fix Post Formatting
+
+on:
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: "Post ID"
+        required: true
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Fix post formatting
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python scripts/fix_post_formatting.py --post-id "${{ github.event.inputs.post_id }}"
