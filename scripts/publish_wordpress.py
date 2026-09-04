@@ -48,8 +48,8 @@ def get_category_id_by_name(site, auth, name):
     return None
 
 
-def create_draft_post(site, auth, title, content_html, featured_media_id=None, category_id=None):
-    payload = {"title": title, "content": content_html, "status": "draft"}
+def create_post(site, auth, title, content_html, status, featured_media_id=None, category_id=None):
+    payload = {"title": title, "content": content_html, "status": status}
     if featured_media_id:
         payload["featured_media"] = featured_media_id
     if category_id:
@@ -66,6 +66,7 @@ def main():
     parser.add_argument("--image", help="chart image, embedded in the body")
     parser.add_argument("--thumbnail", help="cover/thumbnail image (logo+person composite); used as the featured image")
     parser.add_argument("--category", default="미국주식", help="category name to assign (default: 미국주식)")
+    parser.add_argument("--status", default="publish", choices=["publish", "draft"], help="post status (default: publish)")
     args = parser.parse_args()
 
     site, auth = wp_env()
@@ -87,8 +88,8 @@ def main():
 
     category_id = get_category_id_by_name(site, auth, args.category) if args.category else None
 
-    post = create_draft_post(site, auth, args.title, content_html, thumb_id or chart_id, category_id)
-    print(f"draft created: {post['link']} (id={post['id']}, status={post['status']})")
+    post = create_post(site, auth, args.title, content_html, args.status, thumb_id or chart_id, category_id)
+    print(f"post created: {post['link']} (id={post['id']}, status={post['status']})")
     print(f"edit: {site}/wp-admin/post.php?post={post['id']}&action=edit")
 
 
