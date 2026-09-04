@@ -1,0 +1,21 @@
+name: Check SEO Indexability
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Check robots.txt / meta robots / sitemap
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+        run: python scripts/check_seo_indexability.py
