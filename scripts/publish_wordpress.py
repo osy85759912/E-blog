@@ -84,7 +84,12 @@ def main():
     chart_id = None
     if args.image:
         chart_id, chart_url = upload_media(site, auth, args.image)
-        content_html += f'\n<img src="{chart_url}" alt="관련 종목 주가 차트" style="{img_style}" />\n'
+        chart_tag = f'<img src="{chart_url}" alt="관련 종목 주가 차트" style="{img_style}" />'
+        chart_marker = "<!-- CHART -->"
+        if chart_marker in content_html:
+            content_html = content_html.replace(chart_marker, chart_tag, 1)
+        else:
+            content_html += f"\n{chart_tag}\n"
 
     category_id = get_category_id_by_name(site, auth, args.category) if args.category else None
 
