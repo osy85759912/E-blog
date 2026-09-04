@@ -23,6 +23,10 @@ on:
         description: "kr (코스피/코스닥) or us (S&P500/나스닥)"
         required: false
         default: "us"
+      date:
+        description: "As-of date YYYY-MM-DD for the % change shown (blank = latest trading day)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -50,6 +54,9 @@ jobs:
           ARGS=(--ticker "${{ github.event.inputs.ticker }}" --title "${{ github.event.inputs.title }}" --mood "${{ github.event.inputs.mood }}" --market "${{ github.event.inputs.market }}" --out "$OUT")
           if [ -n "${{ github.event.inputs.person }}" ]; then
             ARGS+=(--person "${{ github.event.inputs.person }}")
+          fi
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            ARGS+=(--date "${{ github.event.inputs.date }}")
           fi
           python scripts/generate_thumbnail.py "${ARGS[@]}"
 

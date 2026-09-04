@@ -3,6 +3,7 @@
 generate_thumbnail.py, so currency formatting and company-name lookups
 never drift out of sync between the two."""
 import sys
+from datetime import datetime, timedelta
 
 import yfinance as yf
 
@@ -132,13 +133,28 @@ def company_name_for_ticker(ticker):
         return ticker
 
 
-def fetch_percent_change(ticker):
+def fetch_percent_change(ticker, as_of=None):
+    """% change vs the previous trading day. With `as_of` (a date or
+    YYYY-MM-DD string), this is the change AS OF THAT DAY -- not whatever
+    day the script happens to run on -- so regenerating a thumbnail for an
+    old post doesn't silently overwrite its number with today's move."""
     try:
-        hist = yf.Ticker(ticker).history(period="5d")["Close"]
+        if as_of:
+            if isinstance(as_of, str):
+                as_of = datetime.strptime(as_of, "%Y-%m-%d").date()
+            # wide start margin to clear weekends/holidays back to the prior
+            # trading day; filter (rather than rely on yfinance's `end`) so
+            # we never pick up a day after as_of.
+            start = as_of - timedelta(days=12)
+            end = as_of + timedelta(days=1)
+            hist = yf.Ticker(ticker).history(start=start.isoformat(), end=end.isoformat())["Close"]
+            hist = hist[hist.index.date <= as_of]
+        else:
+            hist = yf.Ticker(ticker).history(period="5d")["Close"]
         if len(hist) < 2:
             return None
         last, prev = hist.iloc[-1], hist.iloc[-2]
         return (last - prev) / prev * 100
     except Exception as exc:
-        print(f"[market_utils] fetch_percent_change({ticker}) failed: {exc!r}", file=sys.stderr)
+        print(f"[market_utils] fetch_percent_change({ticker}, as_of={as_of}) failed: {exc!r}", file=sys.stderr)
         return None

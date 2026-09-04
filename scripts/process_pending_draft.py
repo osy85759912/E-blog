@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import glob
 import os
+import re
 import subprocess
 import sys
+
+DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
 PENDING_DIR = "pending"
 PUBLISHED_DIR = "published"
@@ -57,6 +60,7 @@ def process(path):
         publish_cmd += ["--image", chart_path]
 
         market = "kr" if category == "국내주식" else "us"
+        date_match = DATE_RE.search(base)
         thumb_cmd = [
             sys.executable,
             "scripts/generate_thumbnail.py",
@@ -71,6 +75,8 @@ def process(path):
             "--out",
             thumb_path,
         ]
+        if date_match:
+            thumb_cmd += ["--date", date_match.group(1)]
         if person:
             thumb_cmd += ["--person", person]
         thumb_result = subprocess.run(thumb_cmd)

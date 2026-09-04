@@ -372,6 +372,11 @@ def main():
         choices=list(INDEX_TICKERS.keys()),
         help="kr shows 코스피/코스닥 as the index stats, us shows S&P500/나스닥",
     )
+    parser.add_argument(
+        "--date",
+        help="the post's actual date (YYYY-MM-DD) -- the % change shown is as of this trading day, "
+        "not whatever day the thumbnail happens to be (re)generated on. Default: latest trading day.",
+    )
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
@@ -394,28 +399,28 @@ def main():
 
     draw = ImageDraw.Draw(canvas)
 
-    # hero stats, top-left: the day's index move(s) -- 코스피/코스닥 for domestic
-    # posts, S&P500/나스닥 for US posts -- plus the specific stock this post is
-    # about, clearly labeled with its name so it's obvious what each number
-    # means (a bare "+22.4%" with no label was confusing).
+    # hero stat, top-left: the specific stock this post is about, clearly
+    # labeled with its name and shown biggest since it's the actual subject
+    # of the post -- with the day's index move(s) underneath, smaller, for
+    # context (코스피/코스닥 for domestic posts, S&P500/나스닥 for US posts).
     stats = []
-    for index_ticker, index_label in INDEX_TICKERS[args.market]:
-        index_pct = fetch_percent_change(index_ticker)
-        if index_pct is not None:
-            stats.append((index_label, index_pct, False))
-
-    stock_pct = fetch_percent_change(args.ticker)
+    stock_pct = fetch_percent_change(args.ticker, as_of=args.date)
     if stock_pct is not None:
         stock_name = market_company_name(args.ticker)
         stats.append((stock_name, stock_pct, True))
 
+    for index_ticker, index_label in INDEX_TICKERS[args.market]:
+        index_pct = fetch_percent_change(index_ticker, as_of=args.date)
+        if index_pct is not None:
+            stats.append((index_label, index_pct, False))
+
     y = 40
-    for i, (label, pct, is_stock) in enumerate(stats):
+    for label, pct, is_stock in stats:
         text = f"{label} {pct:+.1f}%"
-        font = load_font(56) if i == 0 else load_font(32)
+        font = load_font(56) if is_stock else load_font(32)
         color = style["accent"] if is_stock else WHITE
         draw_text_with_shadow(canvas, (44, y), text, font, fill=color)
-        y += 68 if i == 0 else 44
+        y += 68 if is_stock else 44
 
     # supporting brand marks, bottom-right: logo chip (+ optional portrait)
     logo_img = fetch_logo(args.ticker)

@@ -106,12 +106,15 @@ def refresh_one(site, auth, path):
         return
 
     base = os.path.splitext(os.path.basename(path))[0]
+    date_match = re.search(r"\d{4}-\d{2}-\d{2}", base)
     thumb_path = f"/tmp/refresh-{base}-thumb.png"
     thumb_cmd = [
         sys.executable, "scripts/generate_thumbnail.py",
         "--ticker", primary_ticker, "--title", title, "--mood", mood,
         "--market", market, "--out", thumb_path,
     ]
+    if date_match:
+        thumb_cmd += ["--date", date_match.group(0)]
     if person:
         thumb_cmd += ["--person", person]
     subprocess.run(thumb_cmd, check=True)
