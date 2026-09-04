@@ -67,6 +67,44 @@ INDEX_TICKERS = {
     "us": [("^GSPC", "S&P500"), ("^IXIC", "나스닥")],
 }
 
+# yfinance's shortName for US tickers is the formal English corporate name
+# (e.g. "NVIDIA Corporation"), which reads oddly on a Korean-language
+# thumbnail. Override with the commonly used Korean name for frequently
+# covered large caps; anything not listed falls back to yfinance.
+US_KOREAN_NAMES = {
+    "NVDA": "엔비디아",
+    "AAPL": "애플",
+    "MSFT": "마이크로소프트",
+    "GOOGL": "구글",
+    "GOOG": "구글",
+    "AMZN": "아마존",
+    "META": "메타",
+    "TSLA": "테슬라",
+    "AVGO": "브로드컴",
+    "AMD": "AMD",
+    "NFLX": "넷플릭스",
+    "SMCI": "슈퍼마이크로",
+    "INTC": "인텔",
+    "QCOM": "퀄컴",
+    "TSM": "TSMC",
+    "MU": "마이크론",
+    "PLTR": "팔란티어",
+    "COIN": "코인베이스",
+    "ORCL": "오라클",
+    "CRM": "세일즈포스",
+    "ADBE": "어도비",
+    "UBER": "우버",
+    "BA": "보잉",
+    "JPM": "JP모건",
+    "V": "비자",
+    "MA": "마스터카드",
+    "DIS": "디즈니",
+    "KO": "코카콜라",
+    "PEP": "펩시코",
+    "WMT": "월마트",
+    "COST": "코스트코",
+}
+
 
 def market_for_category(category):
     return "kr" if category == "국내주식" else "us"
@@ -84,6 +122,8 @@ def company_name_for_ticker(ticker):
     ticker = ticker.upper()
     if ticker in KRX_KOREAN_NAMES:
         return KRX_KOREAN_NAMES[ticker]
+    if ticker in US_KOREAN_NAMES:
+        return US_KOREAN_NAMES[ticker]
     try:
         info = yf.Ticker(ticker).info
         return info.get("shortName") or info.get("longName") or ticker
