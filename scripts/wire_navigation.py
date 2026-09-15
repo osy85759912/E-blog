@@ -8,9 +8,14 @@ import sys
 import requests
 
 STRUCTURE = {
-    "일상": ["육아", "맛집", "여행"],
     "공부": ["국내주식", "미국주식"],
 }
+# "일상" (육아/맛집/여행) is deliberately left out of the live nav for now --
+# all three sub-categories currently have 0 posts, and after an AdSense
+# "low-value content" rejection, linking to empty category archive pages
+# from primary navigation isn't worth the risk. Add "일상": [...] back to
+# STRUCTURE (see git history) once there's at least one real post in one
+# of these categories.
 NAV_ID = 4
 HEADER_PART_ID = "twentytwentyfive//vertical-header"
 
