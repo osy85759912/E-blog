@@ -59,6 +59,8 @@ KRX_KOREAN_NAMES = {
     "086520.KQ": "에코프로",
     "247540.KQ": "에코프로비엠",
     "028300.KQ": "HLB",
+    "272210.KS": "한화시스템",
+    "478340.KQ": "나라스페이스테크놀로지",
 }
 
 # index ticker + display label, per market. Order matters -- first entry is
