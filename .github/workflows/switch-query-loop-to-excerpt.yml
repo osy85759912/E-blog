@@ -1,0 +1,27 @@
+name: Switch Query Loop To Excerpt
+
+on:
+  workflow_dispatch:
+    inputs:
+      template_id:
+        description: 'Template ID, e.g. "twentytwentyfive//home" or "twentytwentyfive//archive"'
+        required: true
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Switch post-content block to post-excerpt
+        env:
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python scripts/switch_query_loop_to_excerpt.py --template-id "${{ github.event.inputs.template_id }}"
