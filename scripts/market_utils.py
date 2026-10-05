@@ -108,6 +108,7 @@ US_KOREAN_NAMES = {
     "PEP": "펩시코",
     "WMT": "월마트",
     "COST": "코스트코",
+    "SPCX": "스페이스X",
 }
 
 
