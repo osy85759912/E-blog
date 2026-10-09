@@ -109,6 +109,9 @@ US_KOREAN_NAMES = {
     "WMT": "월마트",
     "COST": "코스트코",
     "SPCX": "스페이스X",
+    "VZ": "버라이즌",
+    "T": "AT&T",
+    "TMUS": "T모바일",
 }
 
 
