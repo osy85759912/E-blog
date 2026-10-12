@@ -63,6 +63,8 @@ KRX_KOREAN_NAMES = {
     "478340.KQ": "나라스페이스테크놀로지",
     "009150.KS": "삼성전기",
     "000250.KQ": "삼천당제약",
+    "017670.KS": "SK텔레콤",
+    "030200.KS": "KT",
 }
 
 # index ticker + display label, per market. Order matters -- first entry is
