@@ -114,6 +114,7 @@ US_KOREAN_NAMES = {
     "VZ": "버라이즌",
     "T": "AT&T",
     "TMUS": "T모바일",
+    "CRWV": "코어위브",
 }
 
 
