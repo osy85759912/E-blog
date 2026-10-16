@@ -91,6 +91,8 @@ US_KOREAN_NAMES = {
     "AMD": "AMD",
     "NFLX": "넷플릭스",
     "SMCI": "슈퍼마이크로",
+    "HPE": "휴렛팩커드엔터프라이즈",
+    "DELL": "델",
     "INTC": "인텔",
     "QCOM": "퀄컴",
     "TSM": "TSMC",
