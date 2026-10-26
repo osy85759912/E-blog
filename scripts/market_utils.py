@@ -119,6 +119,7 @@ US_KOREAN_NAMES = {
     "CRWV": "코어위브",
     "LLY": "일라이릴리",
     "USO": "WTI원유ETF",
+    "SOXX": "반도체ETF",
 }
 
 
