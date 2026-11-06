@@ -120,6 +120,7 @@ US_KOREAN_NAMES = {
     "LLY": "일라이릴리",
     "USO": "WTI원유ETF",
     "SOXX": "반도체ETF",
+    "NET": "클라우드플레어",
 }
 
 
